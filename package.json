@@ -1,0 +1,9 @@
+{
+  "name": "wisetrack-hubspot-proxy",
+  "version": "1.0.0",
+  "description": "Proxy server for Wisetrack Portal ↔ HubSpot API",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {}
+}

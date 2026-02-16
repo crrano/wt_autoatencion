@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Portal de Autoatención Wisetrack — Crea y consulta el estado de tus tickets de soporte.">
+    <title>Wisetrack — Portal de Soporte</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <!-- ═══════ HEADER ═══════ -->
+    <header class="header" id="header">
+        <div class="header__inner">
+            <img src="logo.png" alt="Wisetrack" class="header__logo">
+        </div>
+        <div class="header__bar"></div>
+    </header>
+
+    <!-- ═══════ MAIN ═══════ -->
+    <main class="main">
+
+        <!-- Tabs -->
+        <nav class="tabs" id="tabs" role="tablist">
+            <button class="tabs__btn tabs__btn--active" id="tab-create" role="tab" aria-selected="true"
+                aria-controls="panel-create" data-tab="create">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                Crear Ticket
+            </button>
+            <button class="tabs__btn" id="tab-status" role="tab" aria-selected="false" aria-controls="panel-status"
+                data-tab="status">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.8" />
+                    <path d="M10.5 10.5 14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                </svg>
+                Consultar Estado
+            </button>
+        </nav>
+
+        <!-- ── Panel: Crear Ticket ── -->
+        <section class="card panel panel--active" id="panel-create" role="tabpanel" aria-labelledby="tab-create">
+            <h1 class="card__title">Nueva Solicitud de Soporte</h1>
+            <p class="card__subtitle">Completa el formulario y te responderemos a la brevedad.</p>
+
+            <form id="form-create" class="form" novalidate>
+                <!-- Correo Electrónico -->
+                <div class="form__group">
+                    <label class="form__label" for="create-email">Correo Electrónico</label>
+                    <input class="form__input" type="email" id="create-email" name="email" placeholder="tu@empresa.com"
+                        required>
+                    <span class="form__error" id="create-email-error"></span>
+                </div>
+
+                <!-- Asunto -->
+                <div class="form__group">
+                    <label class="form__label" for="create-subject">Asunto</label>
+                    <input class="form__input" type="text" id="create-subject" name="subject"
+                        placeholder="Describe brevemente tu problema" maxlength="120" required>
+                    <span class="form__counter"><span id="subject-count">0</span>/120</span>
+                    <span class="form__error" id="create-subject-error"></span>
+                </div>
+
+                <!-- Categoría -->
+                <div class="form__group">
+                    <label class="form__label" for="create-category">Categoría</label>
+                    <div class="form__select-wrapper">
+                        <select class="form__input form__input--select" id="create-category" name="category" required>
+                            <option value="" disabled selected>Selecciona una opción</option>
+                            <option value="PRODUCT_ISSUE">Problema con Producto</option>
+                            <option value="BILLING_ISSUE">Facturación</option>
+                            <option value="FEATURE_REQUEST">Solicitud de Funcionalidad</option>
+                            <option value="GENERAL_INQUIRY">Consulta General</option>
+                        </select>
+                        <svg class="form__select-arrow" width="12" height="12" viewBox="0 0 12 12">
+                            <path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                stroke-linejoin="round" fill="none" />
+                        </svg>
+                    </div>
+                    <span class="form__error" id="create-category-error"></span>
+                </div>
+
+                <!-- Descripción -->
+                <div class="form__group">
+                    <label class="form__label" for="create-description">Descripción</label>
+                    <textarea class="form__input form__input--textarea" id="create-description" name="description"
+                        placeholder="Describe el problema con el mayor detalle posible..." maxlength="2000" rows="6"
+                        required></textarea>
+                    <span class="form__counter"><span id="desc-count">0</span>/2000</span>
+                    <span class="form__error" id="create-description-error"></span>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn btn--primary" id="btn-create">
+                    <span class="btn__text">Enviar Solicitud</span>
+                    <span class="btn__loader" aria-hidden="true">
+                        <svg class="spinner" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none"
+                                stroke-dasharray="31.4 31.4" stroke-linecap="round" />
+                        </svg>
+                    </span>
+                </button>
+            </form>
+        </section>
+
+        <!-- ── Panel: Consultar Estado ── -->
+        <section class="card panel" id="panel-status" role="tabpanel" aria-labelledby="tab-status" hidden>
+            <h1 class="card__title">Consultar Estado de Ticket</h1>
+            <p class="card__subtitle">Ingresa los datos de tu ticket para ver su estado actual.</p>
+
+            <form id="form-status" class="form" novalidate>
+                <!-- Número de Ticket -->
+                <div class="form__group">
+                    <label class="form__label" for="status-ticket">Número de Ticket</label>
+                    <input class="form__input" type="text" id="status-ticket" name="ticketId" placeholder="41220427703"
+                        required>
+                    <span class="form__error" id="status-ticket-error"></span>
+                </div>
+
+                <!-- Correo Electrónico -->
+                <div class="form__group">
+                    <label class="form__label" for="status-email">Correo Electrónico</label>
+                    <input class="form__input" type="email" id="status-email" name="email" placeholder="tu@empresa.com"
+                        required>
+                    <span class="form__error" id="status-email-error"></span>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn btn--primary" id="btn-status">
+                    <span class="btn__text">Consultar Estado</span>
+                    <span class="btn__loader" aria-hidden="true">
+                        <svg class="spinner" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none"
+                                stroke-dasharray="31.4 31.4" stroke-linecap="round" />
+                        </svg>
+                    </span>
+                </button>
+            </form>
+
+            <!-- Resultado de consulta -->
+            <div class="status-result" id="status-result" hidden>
+                <div class="status-result__header">
+                    <span class="status-result__badge" id="result-badge"></span>
+                    <span class="status-result__id" id="result-id"></span>
+                </div>
+                <div class="status-result__body">
+                    <div class="status-result__row">
+                        <span class="status-result__label">Propietario derivado</span>
+                        <span class="status-result__value" id="result-owner"></span>
+                    </div>
+                    <div class="status-result__row">
+                        <span class="status-result__label">Asunto</span>
+                        <span class="status-result__value" id="result-subject"></span>
+                    </div>
+                    <div class="status-result__row">
+                        <span class="status-result__label">Categoría</span>
+                        <span class="status-result__value" id="result-category"></span>
+                    </div>
+                    <div class="status-result__row">
+                        <span class="status-result__label">Creado</span>
+                        <span class="status-result__value" id="result-created"></span>
+                    </div>
+                    <div class="status-result__row">
+                        <span class="status-result__label">Última actualización</span>
+                        <span class="status-result__value" id="result-updated"></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ═══════ MODAL ═══════ -->
+    <div class="modal-overlay" id="modal-overlay" hidden>
+        <div class="modal" role="dialog" aria-modal="true" id="modal">
+            <div class="modal__icon" id="modal-icon"></div>
+            <h2 class="modal__title" id="modal-title"></h2>
+            <p class="modal__message" id="modal-message"></p>
+            <button class="btn btn--primary btn--modal" id="modal-close">Aceptar</button>
+        </div>
+    </div>
+
+    <!-- ═══════ FOOTER ═══════ -->
+    <footer class="footer">
+        <p>© 2025 Wisetrack — Portal de Soporte</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
