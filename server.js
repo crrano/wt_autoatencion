@@ -162,7 +162,7 @@ const server = http.createServer(async (req, res) => {
                     content: body.description || '',
                     hs_pipeline: '866504349',
                     hs_pipeline_stage: '1297561004',
-                    hs_ticket_category: body.category || '',
+                    area_de_atencion: body.category || '',
                     source_type: 'FORM',
                 },
             };
