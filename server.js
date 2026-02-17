@@ -88,6 +88,30 @@ function hubspotRequest(method, apiPath, data) {
     });
 }
 
+// ── Audit Log ──
+const AUDIT_LOG_PATH = path.join(__dirname, 'audit.log');
+
+function getClientIp(req) {
+    // X-Forwarded-For for proxies like Render
+    const forwarded = req.headers['x-forwarded-for'];
+    if (forwarded) return forwarded.split(',')[0].trim();
+    return req.socket?.remoteAddress || 'unknown';
+}
+
+function auditLog(req, action, data) {
+    const entry = {
+        timestamp: new Date().toISOString(),
+        ip: getClientIp(req),
+        action,
+        ...data,
+    };
+    const line = JSON.stringify(entry) + '\n';
+    fs.appendFile(AUDIT_LOG_PATH, line, (err) => {
+        if (err) console.error('⚠️  Error escribiendo audit log:', err.message);
+    });
+    console.log(`📋 AUDIT: ${action} | ${data.email || '-'} | ticket:${data.ticketId || '-'} | IP:${entry.ip}`);
+}
+
 // ── Helpers ──
 function setCors(res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -175,6 +199,12 @@ const server = http.createServer(async (req, res) => {
                     }
                 }
 
+                auditLog(req, 'CREATE_TICKET', {
+                    email: body.email || '',
+                    ticketId: result.data.id,
+                    subject: body.subject || '',
+                    category: body.category || '',
+                });
                 sendJson(res, 200, { ticketId: result.data.id });
             } else {
                 console.error('❌ Error HubSpot:', result.data);
@@ -351,6 +381,12 @@ const server = http.createServer(async (req, res) => {
                     }
                 }
 
+                auditLog(req, 'CHECK_STATUS', {
+                    email: body.email || '',
+                    ticketId,
+                    status,
+                    owner: ownerName,
+                });
                 console.log('✅ Ticket encontrado, estado:', p.hs_pipeline_stage, '| propietario:', ownerName);
                 sendJson(res, 200, {
                     ticketId: result.data.id,
@@ -367,6 +403,17 @@ const server = http.createServer(async (req, res) => {
                     : (result.data.message || 'Error al consultar ticket');
                 console.error('❌', msg);
                 sendJson(res, result.status, { error: msg });
+            }
+        }
+
+        // ═══ AUDIT LOG (GET) ═══
+        else if (req.url === '/api/audit-log' && req.method === 'GET') {
+            try {
+                const raw = fs.readFileSync(AUDIT_LOG_PATH, 'utf8');
+                const entries = raw.trim().split('\n').filter(Boolean).map(line => JSON.parse(line));
+                sendJson(res, 200, { total: entries.length, entries: entries.reverse() });
+            } catch {
+                sendJson(res, 200, { total: 0, entries: [] });
             }
         }
 
