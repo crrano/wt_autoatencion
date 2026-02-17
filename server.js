@@ -163,6 +163,7 @@ const server = http.createServer(async (req, res) => {
                     hs_pipeline: '866504349',
                     hs_pipeline_stage: '1297561004',
                     area_de_atencion: body.category || '',
+                    source_portal: 'portal_cliente',
                     source_type: 'FORM',
                 },
             };
