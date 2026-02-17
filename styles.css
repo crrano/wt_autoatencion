@@ -52,6 +52,78 @@
     --ease: cubic-bezier(.4, 0, .2, 1);
 }
 
+/* ── Login Overlay ── */
+.login-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: linear-gradient(135deg, #e0f2f4 0%, #fff 50%, #e0f2f4 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.login-overlay[hidden] {
+    display: none;
+}
+
+.login-card {
+    background: var(--clr-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 36px 32px 32px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    animation: scaleIn .3s var(--ease);
+}
+
+.login-card__logo {
+    height: 44px;
+    width: auto;
+    margin-bottom: 16px;
+}
+
+.login-card__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--clr-text);
+    margin-bottom: 4px;
+}
+
+.login-card__subtitle {
+    font-size: .875rem;
+    color: var(--clr-text-muted);
+    margin-bottom: 24px;
+}
+
+.login-card .form__error {
+    text-align: center;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    20%,
+    60% {
+        transform: translateX(-8px);
+    }
+
+    40%,
+    80% {
+        transform: translateX(8px);
+    }
+}
+
+.login-card--shake {
+    animation: shake .4s var(--ease);
+}
+
 html {
     font-size: 16px;
     scroll-behavior: smooth;

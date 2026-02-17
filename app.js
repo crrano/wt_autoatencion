@@ -5,6 +5,34 @@
 (function () {
     'use strict';
 
+    /* ───────── Login Gate ───────── */
+    const loginOverlay = document.getElementById('login-overlay');
+    const formLogin = document.getElementById('form-login');
+    const loginError = document.getElementById('login-error');
+
+    // Check if already authenticated this session
+    if (sessionStorage.getItem('wt_auth') === 'ok') {
+        loginOverlay.hidden = true;
+    }
+
+    formLogin.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const user = document.getElementById('login-user').value.trim();
+        const pass = document.getElementById('login-pass').value;
+
+        if (user === 'wisetrackcs' && pass === '$$Marchant201') {
+            sessionStorage.setItem('wt_auth', 'ok');
+            loginOverlay.hidden = true;
+            loginError.textContent = '';
+        } else {
+            loginError.textContent = 'Usuario o contraseña incorrectos';
+            const card = document.querySelector('.login-card');
+            card.classList.remove('login-card--shake');
+            void card.offsetWidth; // trigger reflow
+            card.classList.add('login-card--shake');
+        }
+    });
+
     /* ───────── Configuration ───────── */
     const CONFIG = {
         // ══════════════════════════════════════════════════════
