@@ -336,18 +336,19 @@ const server = http.createServer(async (req, res) => {
                     'GENERAL_INQUIRY': 'Consulta General',
                 };
 
-                // Resolve owner name
-                // NOTE: The token lacks crm.objects.owners.read scope so we
-                //       can't call /crm/v3/owners/. Instead we maintain a map.
-                //       Add new owners here as { 'ownerId': 'Nombre' }.
-                const OWNER_MAP = {
-                    '86373870': 'Rodrigo Serrano',
-                };
-
+                // Resolve owner name dynamically via HubSpot API
                 const ownerId = p.hubspot_owner_id || p.hs_all_owner_ids;
                 let ownerName = 'Sin asignar';
                 if (ownerId) {
-                    ownerName = OWNER_MAP[ownerId] || `ID ${ownerId}`;
+                    try {
+                        const ownerResult = await hubspotRequest('GET', `/crm/v3/owners/${ownerId}`);
+                        if (ownerResult.status >= 200 && ownerResult.status < 300) {
+                            const o = ownerResult.data;
+                            ownerName = `${o.firstName || ''} ${o.lastName || ''}`.trim() || o.email || ownerName;
+                        }
+                    } catch (e) {
+                        console.log('⚠️  No se pudo obtener propietario:', e.message);
+                    }
                 }
 
                 console.log('✅ Ticket encontrado, estado:', p.hs_pipeline_stage, '| propietario:', ownerName);
