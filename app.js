@@ -329,8 +329,6 @@
             );
 
             formCreate.reset();
-            subjectCount.textContent = '0';
-            descCount.textContent = '0';
 
         } catch (err) {
             console.error('Error creating ticket:', err);
