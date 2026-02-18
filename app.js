@@ -64,8 +64,6 @@
     const inputSubject = $('#create-subject');
     const inputCategory = $('#create-category');
     const inputDesc = $('#create-description');
-    const subjectCount = $('#subject-count');
-    const descCount = $('#desc-count');
     const btnCreate = $('#btn-create');
 
     // Status form
@@ -114,14 +112,6 @@
         btn.addEventListener('click', () => switchTab(btn.dataset.tab));
     });
 
-    /* ───────── Character Counters ───────── */
-    inputSubject.addEventListener('input', () => {
-        subjectCount.textContent = inputSubject.value.length;
-    });
-
-    inputDesc.addEventListener('input', () => {
-        descCount.textContent = inputDesc.value.length;
-    });
 
     /* ───────── Validation ───────── */
     function isValidEmail(email) {
