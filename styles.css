@@ -367,6 +367,14 @@ body {
     margin-top: -2px;
 }
 
+/* Hint */
+.form__hint {
+    font-size: .82rem;
+    color: var(--clr-text-muted);
+    margin: 0;
+    font-style: italic;
+}
+
 /* Error */
 .form__error {
     font-size: .8rem;
