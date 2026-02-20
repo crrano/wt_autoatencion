@@ -465,6 +465,13 @@ const server = http.createServer(async (req, res) => {
                     }
                 }
 
+                // Clean up subject if HubSpot workflow prepends the ticket ID
+                let cleanSubject = p.subject || '';
+                const prefix = `${result.data.id} - `;
+                if (cleanSubject.startsWith(prefix)) {
+                    cleanSubject = cleanSubject.substring(prefix.length);
+                }
+
                 auditLog(req, 'CHECK_STATUS', {
                     email: body.email || '',
                     ticketId,
@@ -476,7 +483,7 @@ const server = http.createServer(async (req, res) => {
                     ticketId: result.data.id,
                     status: status,
                     owner: ownerName,
-                    subject: p.subject || '',
+                    subject: cleanSubject,
                     category: categoryMap[p.hs_ticket_category] || p.hs_ticket_category || '',
                     createdAt: p.createdate || '',
                     updatedAt: p.hs_lastmodifieddate || '',
