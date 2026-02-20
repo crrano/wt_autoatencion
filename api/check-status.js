@@ -26,6 +26,43 @@ export default async function handler(req, res) {
         );
 
         if (result.status >= 200 && result.status < 300) {
+
+            // Validate email association
+            const pEmail = body.email;
+            if (pEmail) {
+                try {
+                    // 1. Get contacts associated with this ticket
+                    const assocResult = await hubspotRequest('GET', `/crm/v3/objects/tickets/${ticketId}/associations/contacts`);
+
+                    if (assocResult.status >= 200 && assocResult.status < 300 && assocResult.data && assocResult.data.results) {
+                        const contactIds = assocResult.data.results.map(r => r.id);
+                        let isAuthorized = false;
+
+                        // 2. Lookup each contact to verify the email
+                        for (const cid of contactIds) {
+                            const cResult = await hubspotRequest('GET', `/crm/v3/objects/contacts/${cid}?properties=email`);
+                            if (cResult.status >= 200 && cResult.status < 300) {
+                                const cEmail = cResult.data.properties.email;
+                                if (cEmail && cEmail.toLowerCase() === pEmail.toLowerCase()) {
+                                    isAuthorized = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!isAuthorized) {
+                            console.log(`⚠️ Email no autorizado para el ticket ${ticketId}: ${pEmail}`);
+                            return res.status(401).json({ error: 'El correo electrónico ingresado no corresponde al solicitante original de este ticket.' });
+                        }
+                    } else {
+                        // Ticket has no contacts associated
+                        return res.status(401).json({ error: 'Este ticket no tiene un contacto asociado o el correo ingresado no es válido.' });
+                    }
+                } catch (e) {
+                    console.log('⚠️ Error validando asociacion de email:', e.message);
+                    return res.status(500).json({ error: 'Error interno validando los permisos del ticket.' });
+                }
+            }
             const p = result.data.properties || {};
 
             // Map ALL HubSpot pipeline stages to portal status keys
