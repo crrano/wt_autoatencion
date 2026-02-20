@@ -371,8 +371,7 @@
             showModal(
                 'error',
                 'Error al Consultar',
-                'No se pudo obtener el estado del ticket. Verifica los datos e intenta nuevamente.<br><br>' +
-                `<small style="color:var(--clr-text-muted)">${err.message}</small>`
+                'No se pudo obtener el estado del ticket. Verifica los datos e intenta nuevamente.'
             );
         } finally {
             setLoading(btnStatus, false);
