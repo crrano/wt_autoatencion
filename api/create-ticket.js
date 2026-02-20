@@ -58,6 +58,54 @@ export default async function handler(req, res) {
             }
         }
 
+        // --- File Upload ---
+        if (body.fileData && body.fileData.base64) {
+            try {
+                console.log('📎 Subiendo archivo adjunto a HubSpot...');
+
+                // Decode base64 to buffer
+                const buffer = Buffer.from(body.fileData.base64, 'base64');
+
+                // HubSpot Files API v3 requires multipart/form-data
+                const formData = new FormData();
+                const blob = new Blob([buffer], { type: body.fileData.type });
+
+                formData.append('file', blob, body.fileData.name);
+                formData.append('folderPath', '/tickets_portal');
+                formData.append('options', JSON.stringify({
+                    access: 'PRIVATE', // Keep files private by default
+                    overwrite: false,
+                    duplicateValidationStrategy: 'NONE',
+                    duplicateValidationScope: 'ENTIRE_PORTAL'
+                }));
+
+                const fileRes = await fetch('https://api.hubapi.com/files/v3/files', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${process.env.HUBSPOT_TOKEN}`
+                        // Don't set Content-Type manually, fetch will set it with boundary
+                    },
+                    body: formData
+                });
+
+                if (fileRes.ok) {
+                    const fileData = await fileRes.json();
+                    if (fileData && fileData.id) {
+                        console.log('✅ Archivo subido con ID:', fileData.id);
+                        // Add file ID to ticket properties
+                        ticketData.properties.hs_file_upload = fileData.id;
+                    }
+                } else {
+                    const errorText = await fileRes.text();
+                    console.error('⚠️ Error al subir archivo a HubSpot:', fileRes.status, errorText);
+                    // We continue ticket creation even if file upload fails, to not lose the request
+                }
+            } catch (err) {
+                console.error('⚠️ Excepción subiendo archivo:', err.message);
+            }
+        }
+        // -------------------
+
         const result = await hubspotRequest('POST', '/crm/v3/objects/tickets', ticketData);
 
         if (result.status >= 200 && result.status < 300) {

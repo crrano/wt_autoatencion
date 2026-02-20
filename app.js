@@ -37,6 +37,7 @@
     const inputSubject = $('#create-subject');
     const inputCategory = $('#create-category');
     const inputDesc = $('#create-description');
+    const inputFile = $('#create-file');
     const btnCreate = $('#btn-create');
 
     // Status form
@@ -287,6 +288,40 @@
             category: inputCategory.value,
             description: inputDesc.value.trim(),
         };
+
+        // File handling
+        if (inputFile && inputFile.files.length > 0) {
+            const file = inputFile.files[0];
+            const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+
+            if (file.size > MAX_SIZE) {
+                setLoading(btnCreate, false);
+                return showModal(
+                    'error',
+                    'Atención',
+                    'El archivo supera el tamaño máximo permitido de 10 MB. Por favor, adjunta un archivo más pequeño.'
+                );
+            }
+
+            try {
+                const base64Data = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result.split(',')[1]); // Extract only base64 string
+                    reader.onerror = error => reject(error);
+                    reader.readAsDataURL(file);
+                });
+
+                payload.fileData = {
+                    name: file.name,
+                    type: file.type || 'application/octet-stream',
+                    base64: base64Data
+                };
+            } catch (err) {
+                console.error('Error reading file:', err);
+                setLoading(btnCreate, false);
+                return showModal('error', 'Error al adjuntar', 'No se pudo leer el archivo. Intenta de nuevo.');
+            }
+        }
 
         try {
             let result;
