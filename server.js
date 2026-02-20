@@ -199,6 +199,48 @@ const server = http.createServer(async (req, res) => {
                 }
             }
 
+            // --- File Upload ---
+            if (body.fileData && body.fileData.base64) {
+                try {
+                    console.log('📎 Subiendo archivo adjunto a HubSpot...');
+
+                    const buffer = Buffer.from(body.fileData.base64, 'base64');
+                    const formData = new FormData();
+                    const blob = new Blob([buffer], { type: body.fileData.type });
+
+                    formData.append('file', blob, body.fileData.name);
+                    formData.append('folderPath', '/tickets_portal');
+                    formData.append('options', JSON.stringify({
+                        access: 'PRIVATE',
+                        overwrite: false,
+                        duplicateValidationStrategy: 'NONE',
+                        duplicateValidationScope: 'ENTIRE_PORTAL'
+                    }));
+
+                    const fileRes = await fetch('https://api.hubapi.com/files/v3/files', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${process.env.HUBSPOT_TOKEN}`
+                        },
+                        body: formData
+                    });
+
+                    if (fileRes.ok) {
+                        const fileData = await fileRes.json();
+                        if (fileData && (fileData.url || fileData.id)) {
+                            console.log('✅ Archivo subido con ID/URL:', fileData.id);
+                            ticketData.properties.hs_file_upload = fileData.url || fileData.defaultHostingUrl || fileData.id;
+                        }
+                    } else {
+                        const errorText = await fileRes.text();
+                        console.error('⚠️ Error al subir archivo a HubSpot:', fileRes.status, errorText);
+                    }
+                } catch (err) {
+                    console.error('⚠️ Excepción subiendo archivo:', err.message);
+                }
+            }
+            // -------------------
+
             const result = await hubspotRequest('POST', '/crm/v3/objects/tickets', ticketData);
 
             if (result.status >= 200 && result.status < 300) {

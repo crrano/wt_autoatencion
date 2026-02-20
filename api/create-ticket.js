@@ -90,10 +90,10 @@ export default async function handler(req, res) {
 
                 if (fileRes.ok) {
                     const fileData = await fileRes.json();
-                    if (fileData && fileData.id) {
+                    if (fileData && (fileData.url || fileData.id)) {
                         console.log('✅ Archivo subido con ID:', fileData.id);
-                        // Add file ID to ticket properties
-                        ticketData.properties.hs_file_upload = fileData.id;
+                        // Add file URL to ticket properties so HubSpot UI renders it as a clickable link
+                        ticketData.properties.hs_file_upload = fileData.url || fileData.defaultHostingUrl || fileData.id;
                     }
                 } else {
                     const errorText = await fileRes.text();
