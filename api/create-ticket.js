@@ -59,6 +59,7 @@ export default async function handler(req, res) {
         }
 
         // --- File Upload ---
+        let uploadedFileId = null;
         if (body.fileData && body.fileData.base64) {
             try {
                 console.log('📎 Subiendo archivo adjunto a HubSpot...');
@@ -91,9 +92,10 @@ export default async function handler(req, res) {
                 if (fileRes.ok) {
                     const fileData = await fileRes.json();
                     if (fileData && (fileData.url || fileData.id)) {
-                        console.log('✅ Archivo subido con ID:', fileData.id);
-                        // Add file URL to ticket properties so HubSpot UI renders it as a clickable link
-                        ticketData.properties.hs_file_upload = fileData.url || fileData.defaultHostingUrl || fileData.id;
+                        uploadedFileId = fileData.id;
+                        console.log('✅ Archivo subido con ID:', uploadedFileId);
+                        // Add file URL to ticket properties so HubSpot UI renders it as a clickable link in the property panel
+                        ticketData.properties.hs_file_upload = fileData.url || fileData.defaultHostingUrl || uploadedFileId;
                     }
                 } else {
                     const errorText = await fileRes.text();
@@ -109,14 +111,15 @@ export default async function handler(req, res) {
         const result = await hubspotRequest('POST', '/crm/v3/objects/tickets', ticketData);
 
         if (result.status >= 200 && result.status < 300) {
-            console.log('✅ Ticket creado:', result.data.id);
+            const newTicketId = result.data.id;
+            console.log('✅ Ticket creado:', newTicketId);
 
             // Try to associate contact by id
             if (contactId) {
                 try {
                     await hubspotRequest(
                         'PUT',
-                        `/crm/v3/objects/tickets/${result.data.id}/associations/contacts/${contactId}/ticket_to_contact`,
+                        `/crm/v3/objects/tickets/${newTicketId}/associations/contacts/${contactId}/ticket_to_contact`,
                         {}
                     );
                     console.log('🔗 Contacto asociado:', contactId);
@@ -125,7 +128,29 @@ export default async function handler(req, res) {
                 }
             }
 
-            return res.status(200).json({ ticketId: result.data.id });
+            // --- Attach File as Note ---
+            if (uploadedFileId) {
+                try {
+                    console.log('📎 Añadiendo nota con archivo adjunto al ticket...');
+                    await hubspotRequest('POST', '/crm/v3/objects/notes', {
+                        properties: {
+                            hs_timestamp: Date.now().toString(),
+                            hs_note_body: 'El cliente adjuntó un archivo a través del portal de autoatención.',
+                            hs_attachment_ids: uploadedFileId
+                        },
+                        associations: [{
+                            to: { id: newTicketId },
+                            types: [{ associationCategory: 'HUBSPOT_DEFINED', associationTypeId: 228 }]
+                        }]
+                    });
+                    console.log('✅ Nota de archivo creada correctamente.');
+                } catch (e) {
+                    console.log('⚠️  No se pudo crear la nota con archivo:', e.message);
+                }
+            }
+            // ---------------------------
+
+            return res.status(200).json({ ticketId: newTicketId });
         } else {
             console.error('❌ Error HubSpot:', result.data);
             return res.status(result.status).json({

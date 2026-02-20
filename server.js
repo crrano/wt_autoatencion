@@ -244,14 +244,15 @@ const server = http.createServer(async (req, res) => {
             const result = await hubspotRequest('POST', '/crm/v3/objects/tickets', ticketData);
 
             if (result.status >= 200 && result.status < 300) {
-                console.log('✅ Ticket creado:', result.data.id);
+                const newTicketId = result.data.id;
+                console.log('✅ Ticket creado:', newTicketId);
 
                 // Try to associate contact by id
                 if (contactId) {
                     try {
                         await hubspotRequest(
                             'PUT',
-                            `/crm/v3/objects/tickets/${result.data.id}/associations/contacts/${contactId}/ticket_to_contact`,
+                            `/crm/v3/objects/tickets/${newTicketId}/associations/contacts/${contactId}/ticket_to_contact`,
                             {}
                         );
                         console.log('🔗 Contacto asociado:', contactId);
@@ -259,6 +260,28 @@ const server = http.createServer(async (req, res) => {
                         console.log('⚠️  No se pudo asociar contacto:', e.message);
                     }
                 }
+
+                // --- Attach File as Note ---
+                if (uploadedFileId) {
+                    try {
+                        console.log('📎 Añadiendo nota con archivo adjunto al ticket...');
+                        await hubspotRequest('POST', '/crm/v3/objects/notes', {
+                            properties: {
+                                hs_timestamp: Date.now().toString(),
+                                hs_note_body: 'El cliente adjuntó un archivo a través del portal de autoatención.',
+                                hs_attachment_ids: uploadedFileId
+                            },
+                            associations: [{
+                                to: { id: newTicketId },
+                                types: [{ associationCategory: 'HUBSPOT_DEFINED', associationTypeId: 228 }]
+                            }]
+                        });
+                        console.log('✅ Nota de archivo creada correctamente.');
+                    } catch (e) {
+                        console.log('⚠️  No se pudo crear la nota con archivo:', e.message);
+                    }
+                }
+                // ---------------------------
 
                 auditLog(req, 'CREATE_TICKET', {
                     email: body.email || '',
