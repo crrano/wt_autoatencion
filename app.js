@@ -431,6 +431,18 @@
         resultCreated.textContent = formatDate(data.createdAt);
         resultUpdated.textContent = formatDate(data.updatedAt);
 
+        const resultFileContainer = document.getElementById('result-file-container');
+        const resultFile = document.getElementById('result-file');
+        if (resultFileContainer && resultFile) {
+            if (data.fileUrl) {
+                resultFileContainer.style.display = 'flex';
+                resultFile.innerHTML = `<a href="${data.fileUrl}" target="_blank" rel="noopener noreferrer" style="color: var(--clr-primary); text-decoration: underline; font-weight: bold;">Descargar / Ver</a>`;
+            } else {
+                resultFileContainer.style.display = 'none';
+                resultFile.innerHTML = '';
+            }
+        }
+
         statusResult.hidden = false;
     }
 

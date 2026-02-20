@@ -310,7 +310,7 @@ const server = http.createServer(async (req, res) => {
 
             const result = await hubspotRequest(
                 'GET',
-                `/crm/v3/objects/tickets/${ticketId}?properties=subject,content,createdate,hs_lastmodifieddate,hs_pipeline_stage,hs_ticket_category,hubspot_owner_id,hs_all_owner_ids,closed_date`
+                `/crm/v3/objects/tickets/${ticketId}?properties=subject,content,createdate,hs_lastmodifieddate,hs_pipeline_stage,hs_ticket_category,hubspot_owner_id,hs_all_owner_ids,closed_date,hs_file_upload`
             );
 
             if (result.status >= 200 && result.status < 300) {
@@ -480,6 +480,7 @@ const server = http.createServer(async (req, res) => {
                     category: categoryMap[p.hs_ticket_category] || p.hs_ticket_category || '',
                     createdAt: p.createdate || '',
                     updatedAt: p.hs_lastmodifieddate || '',
+                    fileUrl: p.hs_file_upload || ''
                 });
             } else {
                 const msg = result.status === 404
