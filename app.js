@@ -437,6 +437,9 @@
         // Switch to status tab automatically
         switchTab('status');
 
+        // Clean the URL bar to hide the parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
+
         // Fill input fields
         if (inputTicketId) inputTicketId.value = qTicketId;
         if (inputStatusEmail) inputStatusEmail.value = qEmail;
