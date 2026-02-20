@@ -164,37 +164,55 @@ const server = http.createServer(async (req, res) => {
                     hs_pipeline_stage: '1297561004',
                     area_de_atencion: body.category || '',
                     source_portal: 'portal_cliente',
-                    source_type: 'FORM',
+                    source_type: 'FORM'
                 },
             };
+
+            let contactId = null;
+
+            if (body.email) {
+                try {
+                    const contactSearch = await hubspotRequest('POST', '/crm/v3/objects/contacts/search', {
+                        filterGroups: [{
+                            filters: [{
+                                propertyName: 'email',
+                                operator: 'EQ',
+                                value: body.email,
+                            }],
+                        }],
+                    });
+
+                    if (contactSearch.status >= 200 && contactSearch.status < 300 && contactSearch.data && contactSearch.data.total > 0) {
+                        contactId = contactSearch.data.results[0].id;
+                        console.log('✅ Contacto encontrado:', contactId);
+                    } else {
+                        console.log('⚠️  No se encontró contacto para el correo:', body.email);
+                        return sendJson(res, 400, {
+                            error: 'Lo sentimos, su e-mail no se encuentra registrado en nuestro sistema. Por favor verifique si está correcto o comuníquese directamente con nuestra Mesa de Ayuda al 800 400 110'
+                        });
+                    }
+                } catch (e) {
+                    console.log('⚠️  Error al buscar contacto:', e.message);
+                    return sendJson(res, 500, {
+                        error: 'Error interno al verificar el usuario.'
+                    });
+                }
+            }
 
             const result = await hubspotRequest('POST', '/crm/v3/objects/tickets', ticketData);
 
             if (result.status >= 200 && result.status < 300) {
                 console.log('✅ Ticket creado:', result.data.id);
 
-                // Try to associate contact by email
-                if (body.email) {
+                // Try to associate contact by id
+                if (contactId) {
                     try {
-                        const contactSearch = await hubspotRequest('POST', '/crm/v3/objects/contacts/search', {
-                            filterGroups: [{
-                                filters: [{
-                                    propertyName: 'email',
-                                    operator: 'EQ',
-                                    value: body.email,
-                                }],
-                            }],
-                        });
-
-                        if (contactSearch.data && contactSearch.data.total > 0) {
-                            const contactId = contactSearch.data.results[0].id;
-                            await hubspotRequest(
-                                'PUT',
-                                `/crm/v3/objects/tickets/${result.data.id}/associations/contacts/${contactId}/ticket_to_contact`,
-                                {}
-                            );
-                            console.log('🔗 Contacto asociado:', contactId);
-                        }
+                        await hubspotRequest(
+                            'PUT',
+                            `/crm/v3/objects/tickets/${result.data.id}/associations/contacts/${contactId}/ticket_to_contact`,
+                            {}
+                        );
+                        console.log('🔗 Contacto asociado:', contactId);
                     } catch (e) {
                         console.log('⚠️  No se pudo asociar contacto:', e.message);
                     }

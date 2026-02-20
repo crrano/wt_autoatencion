@@ -243,8 +243,21 @@
         });
 
         if (!res.ok) {
-            const errorText = await res.text();
-            throw new Error(errorText || `Error ${res.status}`);
+            let errorMsg = `Error ${res.status}`;
+            try {
+                const text = await res.text();
+                if (text) {
+                    try {
+                        const errObj = JSON.parse(text);
+                        errorMsg = errObj.error || text;
+                    } catch (e) {
+                        errorMsg = text;
+                    }
+                }
+            } catch (e) {
+                // ignore
+            }
+            throw new Error(errorMsg);
         }
 
         return res.json();
@@ -267,11 +280,9 @@
     };
 
     const CATEGORY_LABELS = {
-        soporte_tecnico: 'Soporte Técnico',
-        facturacion: 'Facturación',
-        consulta_general: 'Consulta General',
-        incidencia: 'Incidencia',
-        otro: 'Otro',
+        soporte: 'Soporte',
+        facturacion: 'Finanzas',
+        consulta_general: 'Comercial',
     };
 
     function getDemoStatusResponse(ticketId) {
@@ -284,7 +295,7 @@
             ticketId: ticketId,
             status: randomStatus,
             subject: 'Problema con acceso al sistema GPS',
-            category: 'Soporte Técnico',
+            category: 'Soporte',
             createdAt: created.toISOString(),
             updatedAt: now.toISOString(),
         };
@@ -332,11 +343,20 @@
 
         } catch (err) {
             console.error('Error creating ticket:', err);
+
+            let displayMessage = 'No se pudo crear el ticket. Por favor, intenta nuevamente.<br><br>' +
+                `<small style="color:var(--clr-text-muted)">${err.message}</small>`;
+            let displayTitle = 'Error al Enviar';
+
+            if (err.message.includes('Lo sentimos, su e-mail no se encuentra registrado')) {
+                displayMessage = err.message;
+                displayTitle = 'Atención';
+            }
+
             showModal(
                 'error',
-                'Error al Enviar',
-                'No se pudo crear el ticket. Por favor, intenta nuevamente.<br><br>' +
-                `<small style="color:var(--clr-text-muted)">${err.message}</small>`
+                displayTitle,
+                displayMessage
             );
         } finally {
             setLoading(btnCreate, false);
