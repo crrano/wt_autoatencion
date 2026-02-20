@@ -5,33 +5,6 @@
 (function () {
     'use strict';
 
-    /* ───────── Login Gate ───────── */
-    const loginOverlay = document.getElementById('login-overlay');
-    const formLogin = document.getElementById('form-login');
-    const loginError = document.getElementById('login-error');
-
-    // Check if already authenticated this session
-    if (sessionStorage.getItem('wt_auth') === 'ok') {
-        loginOverlay.hidden = true;
-    }
-
-    formLogin.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const user = document.getElementById('login-user').value.trim();
-        const pass = document.getElementById('login-pass').value;
-
-        if (user === 'wisetrackcs' && pass === '$$Marchant201') {
-            sessionStorage.setItem('wt_auth', 'ok');
-            loginOverlay.hidden = true;
-            loginError.textContent = '';
-        } else {
-            loginError.textContent = 'Usuario o contraseña incorrectos';
-            const card = document.querySelector('.login-card');
-            card.classList.remove('login-card--shake');
-            void card.offsetWidth; // trigger reflow
-            card.classList.add('login-card--shake');
-        }
-    });
 
     /* ───────── Configuration ───────── */
     const CONFIG = {
@@ -454,6 +427,30 @@
             '%c⚠️ Modo Demo activo. Configura los webhooks en CONFIG para conectar con HubSpot.',
             'color: #f59e0b; font-weight: bold;'
         );
+    }
+
+    /* ───────── Auto-load from URL Parameters ───────── */
+    const urlParams = new URLSearchParams(window.location.search);
+    const qTicketId = urlParams.get('ticketId') || urlParams.get('ticket');
+    const qEmail = urlParams.get('email');
+
+    if (qTicketId && qEmail) {
+        // Switch to status tab automatically
+        switchTab('status');
+
+        // Fill input fields
+        if (inputTicketId) inputTicketId.value = qTicketId;
+        if (inputStatusEmail) inputStatusEmail.value = qEmail;
+
+        // Auto-submit the form after a small delay to ensure DOM is ready
+        setTimeout(() => {
+            if (formStatus) {
+                // Dispatching a submit event ensures all validations and loading states trigger correctly
+                formStatus.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            }
+        }, 300);
+    } else if (window.location.hash === '#status' || urlParams.get('tab') === 'status') {
+        switchTab('status');
     }
 
 })();

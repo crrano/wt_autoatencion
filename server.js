@@ -443,7 +443,8 @@ const server = http.createServer(async (req, res) => {
 
         // ═══ STATIC FILES (serve portal) ═══
         else {
-            let filePath = req.url === '/' ? '/index.html' : req.url;
+            const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+            let filePath = parsedUrl.pathname === '/' ? '/index.html' : parsedUrl.pathname;
             filePath = path.join(__dirname, filePath);
 
             // Security: prevent directory traversal
